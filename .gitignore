@@ -1,0 +1,6 @@
+config/
+node_modules/
+.DS_Store
+.vscode/
+*.js
+*.js.map
