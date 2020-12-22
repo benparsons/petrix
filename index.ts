@@ -26,7 +26,6 @@ client.start().then(() => {
     console.log("Client started!");
     refreshRooms();
     tick();
-    client.setDisplayName("petrix");
 });
 
 async function refreshRooms() {
@@ -59,12 +58,15 @@ async function handleCommand(roomId, event) {
                 const petRoomId = await client.createRoom({});
                 client.sendNotice(roomId, `Inviting ${event.sender} to ${petRoomId}.`)
                 await client.inviteUser(event.sender, petRoomId);
-                initPet(petRoomId);
-                refreshRooms();
+                await refreshRooms();
+                rooms[petRoomId].init();
             }
             catch (ex) {
                 console.log(ex);
             }
+        }
+        if (words[1] === "init") {
+            await rooms[roomId].init();
         }
         for (let action of Object.keys(Schema.actions)) {
             if (words[1] === action) {
@@ -73,9 +75,7 @@ async function handleCommand(roomId, event) {
         }
     }
 
-    if (event.content.body.includes("init")) {
-        await initPet(roomId);
-    }
+    
     if (event.content.body.includes("tick")) {
         await tickRoom(roomId);
     }
@@ -84,23 +84,11 @@ async function handleCommand(roomId, event) {
     }
 }
 
-async function initPet(roomId) {
-    const status = {  };
-    for (let attribute of Object.keys(Schema.attributes)) {
-        status[attribute] = Schema.attributes[attribute].initValue;
-    }
-    try {
-        await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, status);
-    }
-    catch(ex) {
-        console.log(ex);
-    }
-    
-}
+
 async function tick() {
     try {
-        const rooms = await client.getJoinedRooms();
-        for (let roomId of rooms) {
+        await refreshRooms();
+        for (let roomId of Object.keys(rooms)) {
             await tickRoom(roomId);
         }
     }

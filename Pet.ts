@@ -1,6 +1,7 @@
 import {
     MatrixClient
 } from "matrix-bot-sdk";
+import Schema from "./schema";
 const userId = require("./config/config.json").userId;
 
 export class Pet {
@@ -37,5 +38,19 @@ export class Pet {
             console.log(ex);
         }
 
+    }
+
+    async init() {
+        const status = {  };
+        for (let attribute of Object.keys(Schema.attributes)) {
+            status[attribute] = Schema.attributes[attribute].initValue;
+        }
+        try {
+            await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, status);
+        }
+        catch(ex) {
+            console.log(ex);
+        }
+        
     }
 }
