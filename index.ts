@@ -41,6 +41,13 @@ async function handleCommand(roomId, event) {
         return;
     }
 
+    if (event.content.body.startsWith("!pet")) {
+        let words = event.content.body.split(" ");
+        if (!words[1] || words[1] === "" || words[1] === "help") {
+            sendHelp(roomId);
+        }
+    }
+
     if (event.content.body.includes("new")) {
         try {
             const petRoomId = await client.createRoom({});
@@ -151,6 +158,12 @@ async function getPetFromRoom(roomId) {
     
     
     return pet ? pet.content : undefined;
+}
+
+function sendHelp(roomId) {
+    client.sendNotice(roomId, 
+        `I respond to messages starting with !pet, followed by one of these words:\n
+        status feed play`);
 }
 
 const polka = require('polka'); 
