@@ -31,18 +31,27 @@ async function handleCommand(roomId, event) {
     }
 
     if (event.content.body.includes("new")) {
-        const petRoomId = await client.createRoom({});
-        await client.inviteUser(event.sender, petRoomId);
-        initPet(petRoomId);
+        try {
+            const petRoomId = await client.createRoom({});
+            client.sendNotice(roomId, `Inviting ${event.sender} to ${petRoomId}.`)
+            await client.inviteUser(event.sender, petRoomId);
+            initPet(petRoomId);
+        }
+        catch (ex) {
+            console.log(ex);
+        }
     }
     if (event.content.body.includes("init")) {
         await initPet(roomId);
     }
     if (event.content.body.includes("tick")) {
-        await tick();
+        await tickRoom(roomId);
     }
     if (event.content.body.includes("status")) {
         await sendStatus(roomId);
+    }
+    if (event.content.body.includes("rooms")) {
+        await sendRoomList(roomId);
     }
     
     for (let action of Object.keys(Schema.actions)) {
@@ -68,14 +77,8 @@ async function initPet(roomId) {
 async function tick() {
     try {
         const rooms = await client.getJoinedRooms();
-        console.log("+++++++++")
-        console.log(rooms);
-        console.log("+++++++++")
         for (let roomId of rooms) {
-            const pet = await getPetFromRoom(roomId);
-            if (pet) {
-                await tickRoom(roomId, pet);
-            }
+            await tickRoom(roomId);
         }
     }
     catch (err) {
@@ -88,7 +91,10 @@ async function tick() {
     }, 100 * 1000);
 }
 
-async function tickRoom(roomId, pet) {
+async function tickRoom(roomId) {
+    const pet = await getPetFromRoom(roomId);
+    if (!pet) { return; }
+
     for (let attr of Object.keys(pet)) {
         pet[attr] += Schema.attributes[attr].tickDelta;
         if (pet[attr] <= Schema.attributes[attr].min.limit) {
@@ -99,6 +105,11 @@ async function tickRoom(roomId, pet) {
         if (pet[attr] <= Schema.attributes[attr].min.warn) {
             await client.sendText(roomId, `Warning, low: ${attr} (${pet[attr]})`);
         }
+        if (pet[attr] >= Schema.attributes[attr].max.limit) {
+            await client.sendText(roomId, `Pet died due to high ${attr}`);
+            await client.leaveRoom(roomId);
+            return;
+        }
     }
     await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, pet);
 }
@@ -106,6 +117,11 @@ async function tickRoom(roomId, pet) {
 async function sendStatus(roomId) {
     const pet = await getPetFromRoom(roomId)
     await client.sendNotice(roomId, JSON.stringify(pet))
+}
+
+async function sendRoomList(roomId) {
+    const rooms = await client.getJoinedRooms();
+    await client.sendNotice(roomId, JSON.stringify(rooms))
 }
 
 async function doAction(roomId, action, actions) {
