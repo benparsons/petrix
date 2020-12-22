@@ -113,6 +113,9 @@ async function tickRoom(roomId) {
             await client.leaveRoom(roomId);
             return;
         }
+        if (pet[attr] >= Schema.attributes[attr].max.warn) {
+            await client.sendText(roomId, `Warning, high: ${attr} (${pet[attr]})`);
+        }
     }
     await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, pet);
 }
