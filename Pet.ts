@@ -26,4 +26,16 @@ export class Pet {
         await this.refresh();
         await this.client.sendNotice(this.roomId, JSON.stringify(this.pet))
     }
+
+    async setName(name: string) {
+        try {
+            await this.client.sendStateEvent(this.roomId, "m.room.member", userId, {
+                "membership": "join",
+                "displayname": name});
+        }
+        catch (ex) {
+            console.log(ex);
+        }
+
+    }
 }

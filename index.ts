@@ -65,7 +65,7 @@ async function handleCommand(roomId, event) {
         await sendRoomList(roomId);
     }
     if (event.content.body.includes("name")) {
-        await sendPetName(roomId, event.content.body);
+        await rooms[roomId].setName(event.content.body);
     }
 
     for (let action of Object.keys(Schema.actions)) {
@@ -134,17 +134,6 @@ async function tickRoom(roomId) {
 async function sendRoomList(roomId) {
     let joinedRooms = await client.getJoinedRooms();
     await client.sendNotice(roomId, JSON.stringify(joinedRooms))
-}
-
-async function sendPetName(roomId, name) {
-    try {
-        await client.sendStateEvent(roomId, "m.room.member", userId, {
-            "membership": "join",
-            "displayname": name});
-    }
-    catch (ex) {
-        console.log(ex);
-    }
 }
 
 async function doAction(roomId, action, actions) {
