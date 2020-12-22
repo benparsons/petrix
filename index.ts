@@ -46,6 +46,12 @@ async function handleCommand(roomId, event) {
         if (!words[1] || words[1] === "" || words[1] === "help") {
             sendHelp(roomId);
         }
+        if (words[1] === "status") {
+            await rooms[roomId].sendStatus();
+        }
+        if (words[1] === "name" || words[1] === "rename") {
+            await rooms[roomId].setName(words.slice(2).join(" "));
+        }
     }
 
     if (event.content.body.includes("new")) {
@@ -65,14 +71,8 @@ async function handleCommand(roomId, event) {
     if (event.content.body.includes("tick")) {
         await tickRoom(roomId);
     }
-    if (event.content.body.includes("status")) {
-        await rooms[roomId].sendStatus();
-    }
     if (event.content.body.includes("rooms")) {
         await sendRoomList(roomId);
-    }
-    if (event.content.body.includes("name")) {
-        await rooms[roomId].setName(event.content.body);
     }
 
     for (let action of Object.keys(Schema.actions)) {
@@ -163,7 +163,7 @@ async function getPetFromRoom(roomId) {
 function sendHelp(roomId) {
     client.sendNotice(roomId, 
         `I respond to messages starting with !pet, followed by one of these words:\n
-        status feed play`);
+        status feed play name`);
 }
 
 const polka = require('polka'); 
