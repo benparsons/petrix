@@ -24,11 +24,13 @@ let rooms = {};
 
 client.start().then(() => {
     console.log("Client started!");
-    startup();
+    refreshRooms();
     tick();
+    client.setDisplayName("petrix");
 });
 
-async function startup() {
+async function refreshRooms() {
+    rooms = {};
     const joinedRooms = await client.getJoinedRooms();
     joinedRooms.forEach(roomId => {
         rooms[roomId] = new Pet(client, roomId);
@@ -52,19 +54,25 @@ async function handleCommand(roomId, event) {
         if (words[1] === "name" || words[1] === "rename") {
             await rooms[roomId].setName(words.slice(2).join(" "));
         }
+        if (words[1] === "new") {
+            try {
+                const petRoomId = await client.createRoom({});
+                client.sendNotice(roomId, `Inviting ${event.sender} to ${petRoomId}.`)
+                await client.inviteUser(event.sender, petRoomId);
+                initPet(petRoomId);
+                refreshRooms();
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+        }
+        for (let action of Object.keys(Schema.actions)) {
+            if (words[1] === action) {
+                await doAction(roomId, action, Schema.actions);
+            }
+        }
     }
 
-    if (event.content.body.includes("new")) {
-        try {
-            const petRoomId = await client.createRoom({});
-            client.sendNotice(roomId, `Inviting ${event.sender} to ${petRoomId}.`)
-            await client.inviteUser(event.sender, petRoomId);
-            initPet(petRoomId);
-        }
-        catch (ex) {
-            console.log(ex);
-        }
-    }
     if (event.content.body.includes("init")) {
         await initPet(roomId);
     }
@@ -73,12 +81,6 @@ async function handleCommand(roomId, event) {
     }
     if (event.content.body.includes("rooms")) {
         await sendRoomList(roomId);
-    }
-
-    for (let action of Object.keys(Schema.actions)) {
-        if (event.content.body.includes(action)) {
-            await doAction(roomId, action, Schema.actions);
-        }
     }
 }
 
