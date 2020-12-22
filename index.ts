@@ -16,13 +16,24 @@ const logWrapper = new LogWrapper();
 LogService.setLogger(logWrapper);
 AutojoinRoomsMixin.setupOnClient(client);
 import Schema from "./schema";
+import { Pet } from "./Pet";
 
 client.on("room.message", handleCommand);
 
+let rooms = {};
+
 client.start().then(() => {
     console.log("Client started!");
+    startup();
     tick();
 });
+
+async function startup() {
+    const joinedRooms = await client.getJoinedRooms();
+    joinedRooms.forEach(roomId => {
+        rooms[roomId] = new Pet(client, roomId);
+    })
+}
 
 async function handleCommand(roomId, event) {
 
@@ -48,7 +59,7 @@ async function handleCommand(roomId, event) {
         await tickRoom(roomId);
     }
     if (event.content.body.includes("status")) {
-        await sendStatus(roomId);
+        await rooms[roomId].sendStatus();
     }
     if (event.content.body.includes("rooms")) {
         await sendRoomList(roomId);
@@ -56,7 +67,7 @@ async function handleCommand(roomId, event) {
     if (event.content.body.includes("name")) {
         await sendPetName(roomId, event.content.body);
     }
-    
+
     for (let action of Object.keys(Schema.actions)) {
         if (event.content.body.includes(action)) {
             await doAction(roomId, action, Schema.actions);
@@ -120,14 +131,9 @@ async function tickRoom(roomId) {
     await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, pet);
 }
 
-async function sendStatus(roomId) {
-    const pet = await getPetFromRoom(roomId)
-    await client.sendNotice(roomId, JSON.stringify(pet))
-}
-
 async function sendRoomList(roomId) {
-    const rooms = await client.getJoinedRooms();
-    await client.sendNotice(roomId, JSON.stringify(rooms))
+    let joinedRooms = await client.getJoinedRooms();
+    await client.sendNotice(roomId, JSON.stringify(joinedRooms))
 }
 
 async function sendPetName(roomId, name) {
