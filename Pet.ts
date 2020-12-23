@@ -1,7 +1,7 @@
 import {
     MatrixClient
 } from "matrix-bot-sdk";
-import Schema from "./schema";
+import { PetSchema } from "./PetSchema";
 const userId = require("./config/config.json").userId;
 
 export class Pet {
@@ -49,8 +49,8 @@ export class Pet {
 
     async init() {
         const status = {};
-        for (let attribute of Object.keys(Schema.attributes)) {
-            status[attribute] = Schema.attributes[attribute].initValue;
+        for (let attribute of Object.keys(PetSchema.attributes)) {
+            status[attribute] = PetSchema.attributes[attribute].initValue;
         }
         try {
             let powerLevels = await this.client.getRoomStateEvent(this.roomId, "m.room.power_levels", "");
@@ -70,21 +70,21 @@ export class Pet {
         if (!this.pet) { return; }
 
         for (let attr of Object.keys(this.pet)) {
-            this.pet[attr] += Schema.attributes[attr].tickDelta;
-            if (this.pet[attr] <= Schema.attributes[attr].min.limit) {
+            this.pet[attr] += PetSchema.attributes[attr].tickDelta;
+            if (this.pet[attr] <= PetSchema.attributes[attr].min.limit) {
                 await this.client.sendText(this.roomId, `Pet died due to low ${attr}`);
                 await this.client.leaveRoom(this.roomId);
                 return;
             }
-            if (this.pet[attr] <= Schema.attributes[attr].min.warn) {
+            if (this.pet[attr] <= PetSchema.attributes[attr].min.warn) {
                 await this.client.sendText(this.roomId, `Warning, low: ${attr} (${this.pet[attr]})`);
             }
-            if (this.pet[attr] >= Schema.attributes[attr].max.limit) {
+            if (this.pet[attr] >= PetSchema.attributes[attr].max.limit) {
                 await this.client.sendText(this.roomId, `Pet died due to high ${attr}`);
                 await this.client.leaveRoom(this.roomId);
                 return;
             }
-            if (this.pet[attr] >= Schema.attributes[attr].max.warn) {
+            if (this.pet[attr] >= PetSchema.attributes[attr].max.warn) {
                 await this.client.sendText(this.roomId, `Warning, high: ${attr} (${this.pet[attr]})`);
             }
         }
@@ -94,7 +94,7 @@ export class Pet {
     async doAction(action, actions) {
         await this.refresh();
         actions[action].forEach((effect) => {
-            this.pet[effect.attribute] += effect.delta;
+            this.pet[effect.attribute] += effect.baseDelta;
         })
         await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);
         this.sendStatus();

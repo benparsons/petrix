@@ -4,7 +4,7 @@ import {
     AutojoinRoomsMixin,
     LogService
 } from "matrix-bot-sdk";
-import {LogWrapper} from "./LogWrapper";
+import { LogWrapper } from "./LogWrapper";
 
 const homeserverUrl = require("./config/config.json").homeserver;
 const accessToken = require("./config/config.json").accessToken;
@@ -14,8 +14,8 @@ const client = new MatrixClient(homeserverUrl, accessToken, storage);
 const logWrapper = new LogWrapper();
 LogService.setLogger(logWrapper);
 AutojoinRoomsMixin.setupOnClient(client);
-import Schema from "./schema";
 import { Pet } from "./Pet";
+import { PetSchema } from "./PetSchema";
 
 client.on("room.message", handleCommand);
 
@@ -67,14 +67,15 @@ async function handleCommand(roomId, event) {
         if (words[1] === "init") {
             await rooms[roomId].init();
         }
-        for (let action of Object.keys(Schema.actions)) {
+        
+        for (let action of Object.keys(PetSchema.actions)) {
             if (words[1] === action) {
-                rooms[roomId].doAction(action, Schema.actions);
+                rooms[roomId].doAction(action, PetSchema.actions);
             }
         }
     }
 
-    
+
     if (event.content.body.includes("tick")) {
         await rooms[roomId].tick();
     }
@@ -106,7 +107,7 @@ async function sendRoomList(roomId) {
 }
 
 function sendHelp(roomId) {
-    client.sendNotice(roomId, 
+    client.sendNotice(roomId,
         `I respond to messages starting with !pet, followed by one of these words:\n
         status feed play name`);
 }
