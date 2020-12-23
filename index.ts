@@ -69,7 +69,7 @@ async function handleCommand(roomId, event) {
         }
         for (let action of Object.keys(Schema.actions)) {
             if (words[1] === action) {
-                await doAction(roomId, action, Schema.actions);
+                rooms[roomId].doAction(action, Schema.actions);
             }
         }
     }
@@ -103,23 +103,6 @@ async function tickAll() {
 async function sendRoomList(roomId) {
     let joinedRooms = await client.getJoinedRooms();
     await client.sendNotice(roomId, JSON.stringify(joinedRooms))
-}
-
-async function doAction(roomId, action, actions) {
-    const pet = await getPetFromRoom(roomId);
-    actions[action].forEach((effect) => {
-        pet[effect.attribute] += effect.delta;
-    })
-    await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, pet);
-    await client.sendNotice(roomId, JSON.stringify(pet))
-}
-
-async function getPetFromRoom(roomId) {
-    const state = await client.getRoomState(roomId);
-    const pet = state.find(s => s.type==="org.bpulse.petrix.status"&&s.state_key===userId)
-    
-    
-    return pet ? pet.content : undefined;
 }
 
 function sendHelp(roomId) {

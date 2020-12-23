@@ -90,4 +90,13 @@ export class Pet {
         }
         await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);
     }
+
+    async doAction(action, actions) {
+        await this.refresh();
+        actions[action].forEach((effect) => {
+            this.pet[effect.attribute] += effect.delta;
+        })
+        await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);
+        this.sendStatus();
+    }
 }
