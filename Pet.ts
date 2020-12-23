@@ -8,10 +8,12 @@ export class Pet {
     roomId: string;
     pet: object;
     client: MatrixClient;
+    actions: object = {};
 
     constructor(client: MatrixClient, roomId: string) {
         this.roomId = roomId;
         this.client = client;
+        this.actions = JSON.parse(JSON.stringify(PetSchema.actions));
     }
 
     async refresh() {
@@ -91,9 +93,9 @@ export class Pet {
         await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);
     }
 
-    async doAction(action, actions) {
+    async doAction(action) {
         await this.refresh();
-        actions[action].forEach((effect) => {
+        this.actions[action].forEach((effect) => {
             this.pet[effect.attribute] += effect.baseDelta;
         })
         await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);

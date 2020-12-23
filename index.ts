@@ -70,7 +70,7 @@ async function handleCommand(roomId, event) {
         
         for (let action of Object.keys(PetSchema.actions)) {
             if (words[1] === action) {
-                rooms[roomId].doAction(action, PetSchema.actions);
+                rooms[roomId].doAction(action);
             }
         }
     }
