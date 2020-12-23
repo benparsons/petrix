@@ -53,6 +53,10 @@ export class Pet {
             status[attribute] = Schema.attributes[attribute].initValue;
         }
         try {
+            let powerLevels = await this.client.getRoomStateEvent(this.roomId, "m.room.power_levels", "");
+            //console.log(powerLevels);
+            powerLevels.invite = 0;
+            await this.client.sendStateEvent(this.roomId, "m.room.power_levels", "", powerLevels);
             await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, status);
         }
         catch (ex) {
