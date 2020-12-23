@@ -128,24 +128,24 @@ function sendHelp(roomId) {
         status feed play name`);
 }
 
-const polka = require('polka'); 
-import { readFileSync } from 'fs';
+// const polka = require('polka'); 
+// import { readFileSync } from 'fs';
 
-polka()
-  .get('/get-pet/:roomid', async (req, res) => {
-      var pet = await getPetFromRoom(req.params.roomid)
-      console.log(pet);
-      res.writeHead(200, {
-        'Content-Type': 'application/json'
-      });
-      res.end(JSON.stringify(pet))
-      res
-  })
-  .get('/:path', (req, res) => {
-    const file = readFileSync(`./canvas/${req.params.path}`, 'utf-8');
-    res.end(file);
-  })
-  .listen(3584, err => {
-    if (err) throw err;
-    console.log(`> Running on localhost:3584`);
-  });
+// polka()
+//   .get('/get-pet/:roomid', async (req, res) => {
+//       var pet = await getPetFromRoom(req.params.roomid)
+//       console.log(pet);
+//       res.writeHead(200, {
+//         'Content-Type': 'application/json'
+//       });
+//       res.end(JSON.stringify(pet))
+//       res
+//   })
+//   .get('/:path', (req, res) => {
+//     const file = readFileSync(`./canvas/${req.params.path}`, 'utf-8');
+//     res.end(file);
+//   })
+//   .listen(3584, err => {
+//     if (err) throw err;
+//     console.log(`> Running on localhost:3584`);
+//   });
