@@ -64,11 +64,20 @@ export class Pet {
         catch (ex) {
             console.log(ex);
         }
+        this.resetActions();
+    }
 
+    resetActions() {
+        for (let action of Object.keys(PetSchema.actions)) {
+            for (let i = 0; i < this.actions[action].length; i++) {
+                this.actions[action][i].delta = this.actions[action][i].baseDelta;
+            }
+        }
     }
 
     async tick() {
         await this.refresh();
+        this.resetActions();
         if (!this.pet) { return; }
 
         for (let attr of Object.keys(this.pet)) {
@@ -96,7 +105,8 @@ export class Pet {
     async doAction(action) {
         await this.refresh();
         this.actions[action].forEach((effect) => {
-            this.pet[effect.attribute] += effect.baseDelta;
+            this.pet[effect.attribute] += effect.delta;
+            effect.delta += effect.deltaDelta;
         })
         await this.client.sendStateEvent(this.roomId, "org.bpulse.petrix.status", userId, this.pet);
         this.sendStatus();
