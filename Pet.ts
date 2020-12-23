@@ -31,7 +31,7 @@ export class Pet {
 
     async sendStatus() {
         await this.refresh();
-        await this.client.sendNotice(this.roomId, JSON.stringify(this.pet))
+        await this.client.sendNotice(this.roomId, JSON.stringify(this.pet, null, 2))
     }
 
     async setName(name: string) {
