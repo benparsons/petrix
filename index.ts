@@ -10,7 +10,6 @@ const homeserverUrl = require("./config/config.json").homeserver;
 const accessToken = require("./config/config.json").accessToken;
 const userId = require("./config/config.json").userId;
 const storage = new SimpleFsStorageProvider("config/storage.json");
-const testRoom = "!CtTvtZfObCTrbLBmlh:bpulse.org";
 const client = new MatrixClient(homeserverUrl, accessToken, storage);
 const logWrapper = new LogWrapper();
 LogService.setLogger(logWrapper);
@@ -25,7 +24,7 @@ let rooms = {};
 client.start().then(() => {
     console.log("Client started!");
     refreshRooms();
-    tick();
+    tickAll();
 });
 
 async function refreshRooms() {
@@ -77,7 +76,7 @@ async function handleCommand(roomId, event) {
 
     
     if (event.content.body.includes("tick")) {
-        await tickRoom(roomId);
+        await rooms[roomId].tick();
     }
     if (event.content.body.includes("rooms")) {
         await sendRoomList(roomId);
@@ -85,47 +84,20 @@ async function handleCommand(roomId, event) {
 }
 
 
-async function tick() {
+async function tickAll() {
     try {
         await refreshRooms();
         for (let roomId of Object.keys(rooms)) {
-            await tickRoom(roomId);
+            await rooms[roomId].tick();
         }
     }
     catch (err) {
         console.log(err);
     }
-    
-    
+
     setTimeout(() => {
-        tick()
+        tickAll()
     }, 100 * 1000);
-}
-
-async function tickRoom(roomId) {
-    const pet = await getPetFromRoom(roomId);
-    if (!pet) { return; }
-
-    for (let attr of Object.keys(pet)) {
-        pet[attr] += Schema.attributes[attr].tickDelta;
-        if (pet[attr] <= Schema.attributes[attr].min.limit) {
-            await client.sendText(roomId, `Pet died due to low ${attr}`);
-            await client.leaveRoom(roomId);
-            return;
-        }
-        if (pet[attr] <= Schema.attributes[attr].min.warn) {
-            await client.sendText(roomId, `Warning, low: ${attr} (${pet[attr]})`);
-        }
-        if (pet[attr] >= Schema.attributes[attr].max.limit) {
-            await client.sendText(roomId, `Pet died due to high ${attr}`);
-            await client.leaveRoom(roomId);
-            return;
-        }
-        if (pet[attr] >= Schema.attributes[attr].max.warn) {
-            await client.sendText(roomId, `Warning, high: ${attr} (${pet[attr]})`);
-        }
-    }
-    await client.sendStateEvent(roomId, "org.bpulse.petrix.status", userId, pet);
 }
 
 async function sendRoomList(roomId) {
